@@ -1,28 +1,33 @@
 #! /bin/bash
 
 # 拉取镜像
-docker pull fcojean/l2tp-ipsec-vpn-server
+
+docker pull hwdsl2/ipsec-vpn-server
+
 # 加载 IPsec NETKEY 内核模块
 sudo modprobe af_key
+mkdir -p /etc/docker/vpn/
 
 # 配置PSK，用户名和密码。
-# 该配置psk为“abcdefg”，两个用户名user1和user2，密码都为123456
-cat>vpn.env<<EOF
+# 该配置psk为“abcdefg”，用户名no9ong,密码都为123456
+cat>/etc/docker/vpn/vpn.env<<EOF
+# 预共享密钥
 VPN_IPSEC_PSK=abcdefg
-VPN_PUBLIC_IP=122.9.147.89
-VPN_USER_CREDENTIAL_LIST=[{"login":"user1","password":"123456"},{"login":"user2","password":"123456"}]
+# 用户账号
+VPN_USER=no9ong
+# 链接密码
+VPN_PASSWORD=123456
 EOF
 
 echo ">>>成功<<<"
 
 # 运行容器
 docker run \
-    --name vpn-server \
-    --env-file ./vpn.env \
-    -p 500:500/udp \
-    -p 4500:4500/udp \
-    -v /lib/modules:/lib/modules:ro \
-    -d --privileged \
-    fcojean/l2tp-ipsec-vpn-server
-
-
+-itd \
+--name vpn \
+--env-file /etc/docker/vpn/vpn.env \
+--restart=always \
+-p 500:500/udp \
+-p 4500:4500/udp \
+-d --privileged \
+hwdsl2/ipsec-vpn-server
